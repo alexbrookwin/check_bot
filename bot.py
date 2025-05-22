@@ -52,10 +52,11 @@ async def send_daily_notifications(app):
     while True:
         now = datetime.datetime.now()
         current_time = now.strftime("%H:%M")
-        print(f"Проверка времени: {current_time}")
+        logging.info(f"Проверка времени: {current_time}")
 
         for staff in STAFF:
-            if staff["chat_id"] and staff["open_time"] == "16:00" and current_time == "15:30":
+            # Если текущее время 13:35, и сотрудник должен выйти в 14:00
+            if staff["chat_id"] and staff["open_time"] == "16:00" and current_time == "15:40":
                 keyboard = InlineKeyboardMarkup([
                     [
                         InlineKeyboardButton("✅ Да", callback_data=f"yes|{staff['username']}|{staff['point']}"),
@@ -69,21 +70,27 @@ async def send_daily_notifications(app):
                         reply_markup=keyboard
                     )
                 except Exception as e:
-                    print(f"Ошибка при отправке: {e}")
-        await asyncio.sleep(60)
+                    logging.error(f"Ошибка при отправке: {e}")
 
-# Запуск
+        await asyncio.sleep(60)  # Проверяем каждую минуту
+
 async def main():
     app = ApplicationBuilder().token(TOKEN).build()
 
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CallbackQueryHandler(button_handler))
 
+    # Удаляем старые вебхуки, если есть
     await app.bot.delete_webhook(drop_pending_updates=True)
+
+    # Запускаем таск с рассылкой уведомлений
     asyncio.create_task(send_daily_notifications(app))
 
-    print("Бот запускается...")
+    logging.info("Бот запускается...")
+
+    # Запускаем бота в режиме polling (долгого опроса)
     await app.run_polling()
 
 if __name__ == "__main__":
+    import asyncio
     asyncio.run(main())
