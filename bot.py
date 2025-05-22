@@ -55,7 +55,7 @@ async def send_daily_notifications(app):
         print(f"Проверка времени: {current_time}")
 
         for staff in STAFF:
-            if staff["chat_id"] and staff["open_time"] == "14:00" and current_time == "13:20":
+            if staff["chat_id"] and staff["open_time"] == "14:00" and current_time == "13:35":
                 keyboard = InlineKeyboardMarkup([
                     [
                         InlineKeyboardButton("✅ Да", callback_data=f"yes|{staff['username']}|{staff['point']}"),
@@ -89,8 +89,4 @@ async def main():
     await app.updater.wait()
 
 if __name__ == "__main__":
-<<<<<<< HEAD
     asyncio.run(main())
-=======
-
->>>>>>> 4c87e622d0f1f6a5c1121046247ff95c0cf4b425
