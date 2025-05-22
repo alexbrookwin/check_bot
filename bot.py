@@ -34,7 +34,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
     await update.message.reply_text("Ты не в списке сотрудников.")
 
-# Кнопки
+# Обработка кнопок
 async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
@@ -47,7 +47,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if staff["username"] == ADMIN_USERNAME and staff["chat_id"]:
             await context.bot.send_message(chat_id=staff["chat_id"], text=message)
 
-# Рассылка
+# Рассылка уведомлений
 async def send_daily_notifications(app):
     while True:
         now = datetime.datetime.now()
@@ -55,8 +55,7 @@ async def send_daily_notifications(app):
         logging.info(f"Проверка времени: {current_time}")
 
         for staff in STAFF:
-            # Если текущее время 13:35, и сотрудник должен выйти в 14:00
-            if staff["chat_id"] and staff["open_time"] == "16:00" and current_time == "15:40":
+            if staff["chat_id"] and staff["open_time"] == "16:00" and current_time == "15:35":
                 keyboard = InlineKeyboardMarkup([
                     [
                         InlineKeyboardButton("✅ Да", callback_data=f"yes|{staff['username']}|{staff['point']}"),
@@ -71,26 +70,27 @@ async def send_daily_notifications(app):
                     )
                 except Exception as e:
                     logging.error(f"Ошибка при отправке: {e}")
+        await asyncio.sleep(60)
 
-        await asyncio.sleep(60)  # Проверяем каждую минуту
-
+# Основной запуск
 async def main():
     app = ApplicationBuilder().token(TOKEN).build()
 
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CallbackQueryHandler(button_handler))
 
-    # Удаляем старые вебхуки, если есть
     await app.bot.delete_webhook(drop_pending_updates=True)
-
-    # Запускаем таск с рассылкой уведомлений
     asyncio.create_task(send_daily_notifications(app))
 
     logging.info("Бот запускается...")
-
-    # Запускаем бота в режиме polling (долгого опроса)
     await app.run_polling()
 
+# Railway-friendly запуск
 if __name__ == "__main__":
-    import asyncio
-    asyncio.run(main())
+    try:
+        import asyncio
+        loop = asyncio.get_event_loop()
+        loop.create_task(main())
+        loop.run_forever()
+    except KeyboardInterrupt:
+        print("Бот остановлен.")
