@@ -83,10 +83,7 @@ async def main():
     asyncio.create_task(send_daily_notifications(app))
 
     print("Бот запускается...")
-    await app.initialize()
-    await app.start()
-    await app.updater.start_polling()
-    await app.updater.wait()
+    await app.run_polling()
 
 if __name__ == "__main__":
     asyncio.run(main())
